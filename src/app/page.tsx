@@ -29,6 +29,19 @@ type SavingsResult = {
   screenshots: string[]; // base64 strings
 };
 
+type ShippingResult = {
+  url: string;
+  freeShippingAvailable: boolean;
+  freeShippingThreshold: string;
+  twoDayDelivery: string;
+  sameDayDelivery: string;
+  storePickup: string;
+  storeDeliveryFee: string;
+  additionalNotes: string;
+  sourceUrl: string;
+  error?: string;
+};
+
 export default function Home() {
   const [baseCompany, setBaseCompany] = useState('');
   const [location, setLocation] = useState('');
@@ -45,6 +58,9 @@ export default function Home() {
   
   const [loadingSavings, setLoadingSavings] = useState(false);
   const [savingsResults, setSavingsResults] = useState<SavingsResult[]>([]);
+  
+  const [loadingShipping, setLoadingShipping] = useState(false);
+  const [shippingResults, setShippingResults] = useState<ShippingResult[]>([]);
   
   const [error, setError] = useState('');
 
@@ -152,6 +168,40 @@ export default function Home() {
       setError(err.message);
     } finally {
       setLoadingSavings(false);
+    }
+  };
+
+  const handleGenerateShipping = async () => {
+    if (competitors.length === 0) {
+      setError('No competitors selected');
+      return;
+    }
+    if (!apiKey) {
+      setError('API Key is missing');
+      return;
+    }
+    
+    setError('');
+    setLoadingShipping(true);
+    setShippingResults([]);
+
+    const urls = competitors.map(c => c.url);
+
+    try {
+      const res = await fetch('/api/shipping', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ urls, apiKey }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to generate shipping data');
+      
+      setShippingResults(data.data || []);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoadingShipping(false);
     }
   };
 
@@ -286,6 +336,23 @@ export default function Home() {
                       Crawling & Capturing Screenshots (Heavier Scan)...
                     </span>
                   ) : "Extract Highest Savings (Browser Scan)"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleGenerateShipping}
+                  disabled={loadingShipping}
+                  className="w-full inline-flex justify-center py-3 px-4 border border-teal-200 shadow-sm text-base font-medium rounded-md text-teal-700 bg-teal-50 hover:bg-teal-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50"
+                >
+                  {loadingShipping ? (
+                    <span className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-teal-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Searching for Shipping Policies...
+                    </span>
+                  ) : "Extract Shipping & Delivery (Page Scan)"}
                 </button>
               </div>
             </div>
@@ -482,6 +549,69 @@ export default function Home() {
                   );
                 })}
               </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+        {/* Shipping & Delivery Comparison */}
+        {shippingResults.length > 0 && (
+          <div className="bg-white shadow overflow-hidden sm:rounded-lg mt-12 max-w-7xl mx-auto">
+            <div className="px-4 py-5 sm:px-6">
+              <h3 className="text-lg leading-6 font-medium text-gray-900">6. Shipping & Delivery Comparison</h3>
+              <p className="mt-1 max-w-2xl text-sm text-gray-500">Comparative logistics and fulfillment options.</p>
+            </div>
+            <div className="border-t border-gray-200 overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Competitor</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Free Shipping</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Threshold</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">2-Day Delivery</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Same-Day</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Store Pickup</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Additional Notes</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {shippingResults.map((result, idx) => {
+                    const comp = competitors.find(c => c.url === result.url);
+                    return (
+                      <tr key={idx}>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900 align-top">
+                          {comp?.name || 'Unknown'}<br/>
+                          <a href={result.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-indigo-600 hover:text-indigo-900 font-mono">[Policy Source]</a>
+                        </td>
+                        <td className="px-6 py-4 align-top">
+                          {result.freeShippingAvailable ? (
+                            <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-green-100 text-green-700">AVAILABLE</span>
+                          ) : (
+                            <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-700">NOT SEEN</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900 font-bold align-top whitespace-nowrap">
+                          {result.freeShippingThreshold}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700 align-top">
+                          <span className={result.twoDayDelivery.toLowerCase().includes('free') ? 'text-green-600 font-medium' : 'text-gray-700'}>
+                            {result.twoDayDelivery}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700 align-top">
+                          {result.sameDayDelivery}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700 align-top whitespace-nowrap font-medium">
+                          {result.storePickup}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500 italic align-top max-w-xs">
+                          {result.additionalNotes}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         )}

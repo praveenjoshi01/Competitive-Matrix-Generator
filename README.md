@@ -30,6 +30,7 @@ Advanced scraping using **PlaywrightCrawler** to handle enterprise-grade sites:
 - **Carousel Interaction**: Automatically clicks through hero sliders to capture all major banners.
 - **Screenshot Gallery**: Captures and displays high-resolution visual evidence of top deals.
 - **Deal Metadata**: Structured extraction of Discount Types (Percentage, Fixed, Tiered) and Target Audiences.
+- **Free Shipping & Delivery Comparison**: Automated discovery of shipping policy pages to compare thresholds, 2-day/same-day delivery options, and store pickup availability in a side-by-side table.
 - **Anti-Bot Handling**: Includes advanced logic for cookie banner dismissal (OneTrust, TrustArc, "Accept Cookies", etc.) and lazy-loading triggers for sophisticated enterprise sites.
 
 ## 🛠️ Tech Stack
