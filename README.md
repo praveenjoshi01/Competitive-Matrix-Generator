@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-# Competitive-Matrix-Generator
-Identify top competitors and extract their core campaign strategy automatically using AI.
-=======
 # Competitive Matrix & Market Intelligence Generator
 
 An AI-powered market intelligence tool built with **Next.js** and **Crawlee**. This application automates the process of researching competitors, extracting their core marketing messages, and visualizing their promotional strategies through automated browser scans.
@@ -30,8 +26,20 @@ Advanced scraping using **PlaywrightCrawler** to handle enterprise-grade sites:
 - **Carousel Interaction**: Automatically clicks through hero sliders to capture all major banners.
 - **Screenshot Gallery**: Captures and displays high-resolution visual evidence of top deals.
 - **Deal Metadata**: Structured extraction of Discount Types (Percentage, Fixed, Tiered) and Target Audiences.
-- **Free Shipping & Delivery Comparison**: Automated discovery of shipping policy pages to compare thresholds, 2-day/same-day delivery options, and store pickup availability in a side-by-side table.
-- **Anti-Bot Handling**: Includes advanced logic for cookie banner dismissal (OneTrust, TrustArc, "Accept Cookies", etc.) and lazy-loading triggers for sophisticated enterprise sites.
+- **Anti-Bot Handling**: Includes advanced logic for cookie banner dismissal (OneTrust, TrustArc, "Accept Cookies", etc.) and lazy-loading triggers.
+
+### 5. Flexible Payments & Financing (Runtime Discovery) 💳
+Dynamically discovers and extracts financing options to help analyze customer affordability strategies:
+- **Provider Identification**: Automatically detects BNPL partners like **Affirm, Klarna, Afterpay, PayPal Credit, and Zip**.
+- **Run-time Partner Discovery**: AI-driven logic to identify new localized payment partners as they appear.
+- **Financing Terms**: Comparison of interest-free periods, installment durations, and minimum purchase thresholds.
+- **Store Credit Cards**: Extraction of store-branded credit card offers and their specific perks.
+
+### 6. Shipping & Delivery Comparison 🚚
+Automated discovery of shipping policy pages to compare logistics:
+- **Free Shipping Thresholds**: Identifies exact spend requirements for free shipping.
+- **Delivery Speed**: Compares 2-day, Same-day, and Standard delivery options.
+- **Store Pickup**: Checks for Click & Collect or in-store fulfillment availability.
 
 ## 🛠️ Tech Stack
 
@@ -50,7 +58,7 @@ Advanced scraping using **PlaywrightCrawler** to handle enterprise-grade sites:
 
 1. **Clone the repository:**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/praveenjoshi01/Competitive-Matrix-Generator.git
    cd Competitive-Matrix-Generator
    ```
 
@@ -76,4 +84,3 @@ Advanced scraping using **PlaywrightCrawler** to handle enterprise-grade sites:
 
 ---
 *Built for product managers, marketers, and GTM teams to move from "Checking websites" to "Strategic Analysis" in seconds.*
->>>>>>> 6d46dfe (Initial commit: AI-powered Competitive Matrix Generator with multi-dimensional extraction and deep browser scanning)
