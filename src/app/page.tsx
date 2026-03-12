@@ -154,7 +154,11 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to fetch competitors');
       
-      setCompetitors(data.competitors || []);
+      const allCompanies = [
+        { name: `${baseCompany} (Self)`, url: data.baseCompanyUrl },
+        ...(data.competitors || [])
+      ];
+      setCompetitors(allCompanies);
     } catch (err: any) {
       setError(err.message);
     } finally {

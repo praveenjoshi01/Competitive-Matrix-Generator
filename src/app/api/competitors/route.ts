@@ -22,20 +22,28 @@ export async function POST(req: Request) {
     const openai = new OpenAI({ apiKey });
 
     const prompt = `You are a business research assistant helping to build a competitive matrix.
-Find 5 main competitors for the company "${company}" operating in "${location}".
-For each competitor, provide their name and their main website URL.
-Return the result strictly as a JSON array of objects, where each object has "name" and "url" properties.
+1. Find the main official website URL for the company "${company}".
+2. Find 5 main competitors for "${company}" operating in "${location}". For each competitor, provide their name and their main website URL.
+
+Return the result strictly as a JSON object with two properties:
+- "baseCompanyUrl": The URL of "${company}".
+- "competitors": A JSON array of objects, where each object has "name" and "url" properties.
+
 Example format:
-[
-  { "name": "Competitor 1", "url": "https://competitor1.com" },
-  { "name": "Competitor 2", "url": "https://competitor2.com" }
-]
-Do not include markdown blocks or any other text in your response, just the raw JSON array.`;
+{
+  "baseCompanyUrl": "https://basecompany.com",
+  "competitors": [
+    { "name": "Competitor 1", "url": "https://competitor1.com" },
+    { "name": "Competitor 2", "url": "https://competitor2.com" }
+  ]
+}
+Do not include markdown blocks or any other text in your response, just the raw JSON.`;
 
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.1,
+      response_format: { type: 'json_object' },
     });
 
     const content = response.choices[0].message.content;
@@ -44,11 +52,9 @@ Do not include markdown blocks or any other text in your response, just the raw 
         throw new Error("No response from OpenAI");
     }
 
-    let competitors;
+    let data;
     try {
-        // Attempt to parse the response, removing any potential markdown code block wrappers
-        const cleanedContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-        competitors = JSON.parse(cleanedContent);
+        data = JSON.parse(content);
     } catch (parseError) {
         console.error("Failed to parse OpenAI response:", content);
          return NextResponse.json(
@@ -57,7 +63,7 @@ Do not include markdown blocks or any other text in your response, just the raw 
         );
     }
 
-    return NextResponse.json({ competitors });
+    return NextResponse.json(data);
   } catch (error: any) {
     console.error('API Error:', error);
     return NextResponse.json(
