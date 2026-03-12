@@ -83,6 +83,26 @@ type RewardsResult = {
   error?: string;
 };
 
+type TradeInDevice = {
+  category: string;
+  estimatedCredit: string;
+  description: string | null;
+};
+
+type TradeInResult = {
+  url: string;
+  programName: string;
+  tradeInAvailable: boolean;
+  eligibleDevices: TradeInDevice[];
+  instantCredit: boolean;
+  mailInOption: boolean;
+  bonusOffers: string | null;
+  conditions: string;
+  additionalNotes: string;
+  sourceUrl: string;
+  error?: string;
+};
+
 export default function Home() {
   const [baseCompany, setBaseCompany] = useState('');
   const [location, setLocation] = useState('');
@@ -108,6 +128,9 @@ export default function Home() {
   
   const [loadingRewards, setLoadingRewards] = useState(false);
   const [rewardsResults, setRewardsResults] = useState<RewardsResult[]>([]);
+  
+  const [loadingTradeIn, setLoadingTradeIn] = useState(false);
+  const [tradeInResults, setTradeInResults] = useState<TradeInResult[]>([]);
   
   const [error, setError] = useState('');
 
@@ -320,6 +343,40 @@ export default function Home() {
     }
   };
 
+  const handleGenerateTradeIn = async () => {
+    if (competitors.length === 0) {
+      setError('No competitors selected');
+      return;
+    }
+    if (!apiKey) {
+      setError('API Key is missing');
+      return;
+    }
+    
+    setError('');
+    setLoadingTradeIn(true);
+    setTradeInResults([]);
+
+    const urls = competitors.map(c => c.url);
+
+    try {
+      const res = await fetch('/api/tradein', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ urls, apiKey }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to generate trade-in data');
+      
+      setTradeInResults(data.data || []);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoadingTradeIn(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-12">
@@ -502,6 +559,23 @@ export default function Home() {
                       Scanning Rewards &amp; Loyalty Programs...
                     </span>
                   ) : "Extract Rewards & Loyalty Programs"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleGenerateTradeIn}
+                  disabled={loadingTradeIn}
+                  className="w-full inline-flex justify-center py-3 px-4 border border-rose-200 shadow-sm text-base font-medium rounded-md text-rose-700 bg-rose-50 hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 disabled:opacity-50"
+                >
+                  {loadingTradeIn ? (
+                    <span className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-rose-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Analyzing Trade-In Programs...
+                    </span>
+                  ) : "Extract Trade-In & Buyback info"}
                 </button>
               </div>
             </div>
@@ -925,6 +999,104 @@ export default function Home() {
                           ) : (
                             <span className="text-gray-400 italic">None active</span>
                           )}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500 italic align-top max-w-xs">
+                          {result.additionalNotes || '-'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+        {/* Trade-In & Buyback Comparison */}
+        {tradeInResults.length > 0 && (
+          <div className="bg-white shadow overflow-hidden sm:rounded-lg mt-12">
+            <div className="px-4 py-5 sm:px-6">
+              <h3 className="text-lg leading-6 font-medium text-gray-900">9. Trade-In & Buyback Comparison</h3>
+              <p className="mt-1 max-w-2xl text-sm text-gray-500">Device trade-in programs, buyback options, and upgrade credits.</p>
+            </div>
+            <div className="border-t border-gray-200 overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Competitor</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Program</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Eligible Devices</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Features</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bonus Offers</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conditions</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {tradeInResults.map((result, idx) => {
+                    const comp = competitors.find(c => c.url === result.url);
+                    return (
+                      <tr key={idx}>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900 align-top">
+                          {comp?.name || 'Unknown'}<br/>
+                          {result.error ? (
+                            <span className="text-[10px] text-red-500 font-bold uppercase italic">{result.error}</span>
+                          ) : (
+                            <a href={result.sourceUrl || '#'} target="_blank" rel="noopener noreferrer" className="text-[10px] text-indigo-600 hover:text-indigo-900 font-mono">[Trade-In Page]</a>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900 font-bold align-top">
+                          {result.programName || 'N/A'}<br/>
+                          {!result.tradeInAvailable && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500">UNAVAILABLE</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 align-top">
+                          {result.eligibleDevices?.length > 0 ? (
+                            <div className="flex flex-wrap gap-2">
+                              {result.eligibleDevices.map((device, dIdx) => {
+                                const cat = (device.category || '').toLowerCase();
+                                let icon = '⚙️';
+                                if (cat.includes('laptop') || cat.includes('pc')) icon = '💻';
+                                if (cat.includes('phone') || cat.includes('mobile')) icon = '📱';
+                                if (cat.includes('tablet') || cat.includes('ipad')) icon = '📋';
+                                if (cat.includes('watch') || cat.includes('wearable')) icon = '⌚';
+                                if (cat.includes('console') || cat.includes('gaming')) icon = '🎮';
+
+                                return (
+                                  <div key={dIdx} className="bg-gray-50 border border-gray-100 rounded p-2 text-xs">
+                                    <div className="font-bold text-gray-900 flex items-center">
+                                      <span className="mr-1">{icon}</span> {device.category}
+                                    </div>
+                                    <div className="text-blue-600 font-bold">{device.estimatedCredit}</div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : <span className="text-gray-400 italic text-xs">None listed</span>}
+                        </td>
+                        <td className="px-6 py-4 align-top">
+                          <div className="space-y-1">
+                            {result.instantCredit && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-100 text-yellow-800">
+                                ⚡ INSTANT CREDIT
+                              </span>
+                            )}
+                            {result.mailInOption && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800">
+                                📦 MAIL-IN OPTION
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900 align-top max-w-xs">
+                          {result.bonusOffers ? (
+                            <div className="bg-amber-50 border border-amber-100 p-2 rounded text-amber-800 font-medium whitespace-pre-wrap">
+                              {result.bonusOffers}
+                            </div>
+                          ) : <span className="text-gray-400 italic">None seen</span>}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700 align-top max-w-xs">
+                          {result.conditions || 'N/A'}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-500 italic align-top max-w-xs">
                           {result.additionalNotes || '-'}

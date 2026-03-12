@@ -49,6 +49,13 @@ Scrapes and compares competitor rewards ecosystems:
 - **Sweepstakes Tracking**: Highlights active giveaways and promotional sweepstakes.
 - **Runtime Discovery**: AI-driven identification of new reward structures not explicitly pre-defined.
 
+### 8. Trade-In & Device Buyback 💻
+Analyzes customer upgrade paths and affordability via device exchange:
+- **Program Discovery**: Automatically finds "Trade-In," "Buyback," or "Upgrade" pages.
+- **Credit Evaluation**: Extracts estimated credit ranges for Laptops, Phones, Tablets, and more.
+- **Incentive Tracking**: Highlights instant store credit availability and limited-time trade-in bonuses.
+- **Logistics**: Identifies mail-in vs. in-store trade options and core equipment conditions.
+
 ## 🛠️ Tech Stack
 
 - **Frontend**: Next.js 15 (App Router), React, Tailwind CSS
