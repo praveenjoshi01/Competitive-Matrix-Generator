@@ -741,9 +741,12 @@ export default function Home() {
                 </div>
               )}
             </div>
+          </div>
+        )}
 
-            {/* Urgency & Claims */}
-            <div id="section-urgency" className="bg-white shadow overflow-hidden sm:rounded-lg mt-6 border-l-4 border-green-600 scroll-mt-24">
+        {/* Urgency & Claims */}
+        {urgencyResults.length > 0 && (
+          <div id="section-urgency" className="bg-white shadow overflow-hidden sm:rounded-lg mt-6 border-l-4 border-green-600 scroll-mt-24">
               <button 
                 onClick={() => toggleSection('urgency')}
                 className="w-full px-4 py-5 sm:px-6 flex justify-between items-center hover:bg-gray-50 transition-colors"
@@ -780,7 +783,6 @@ export default function Home() {
                 </div>
               )}
             </div>
-          </div>
         )}
 
         {/* Highest Savings Section */}
