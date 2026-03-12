@@ -64,6 +64,25 @@ type PaymentsResult = {
   error?: string;
 };
 
+type RewardItem = {
+  description: string;
+  rewardType: string;
+  percentage: string | null;
+  condition: string | null;
+};
+
+type RewardsResult = {
+  url: string;
+  programName: string;
+  rewards: RewardItem[];
+  membershipRequired: boolean;
+  membershipBenefits: string;
+  sweepstakes: string | null;
+  additionalNotes: string;
+  sourceUrl: string;
+  error?: string;
+};
+
 export default function Home() {
   const [baseCompany, setBaseCompany] = useState('');
   const [location, setLocation] = useState('');
@@ -86,6 +105,9 @@ export default function Home() {
   
   const [loadingPayments, setLoadingPayments] = useState(false);
   const [paymentsResults, setPaymentsResults] = useState<PaymentsResult[]>([]);
+  
+  const [loadingRewards, setLoadingRewards] = useState(false);
+  const [rewardsResults, setRewardsResults] = useState<RewardsResult[]>([]);
   
   const [error, setError] = useState('');
 
@@ -264,6 +286,40 @@ export default function Home() {
     }
   };
 
+  const handleGenerateRewards = async () => {
+    if (competitors.length === 0) {
+      setError('No competitors selected');
+      return;
+    }
+    if (!apiKey) {
+      setError('API Key is missing');
+      return;
+    }
+    
+    setError('');
+    setLoadingRewards(true);
+    setRewardsResults([]);
+
+    const urls = competitors.map(c => c.url);
+
+    try {
+      const res = await fetch('/api/rewards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ urls, apiKey }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to generate rewards data');
+      
+      setRewardsResults(data.data || []);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoadingRewards(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-12">
@@ -429,6 +485,23 @@ export default function Home() {
                       Crawling Checkout & Finance Options...
                     </span>
                   ) : "Extract Flexible Payments (Runtime Discovery)"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleGenerateRewards}
+                  disabled={loadingRewards}
+                  className="w-full inline-flex justify-center py-3 px-4 border border-purple-200 shadow-sm text-base font-medium rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50"
+                >
+                  {loadingRewards ? (
+                    <span className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-purple-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Scanning Rewards &amp; Loyalty Programs...
+                    </span>
+                  ) : "Extract Rewards & Loyalty Programs"}
                 </button>
               </div>
             </div>
@@ -763,6 +836,95 @@ export default function Home() {
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-700 align-top max-w-xs">
                           {result.creditCardOffers || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500 italic align-top max-w-xs">
+                          {result.additionalNotes || '-'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+        {/* Rewards & Loyalty Comparison */}
+        {rewardsResults.length > 0 && (
+          <div className="bg-white shadow overflow-hidden sm:rounded-lg mt-12">
+            <div className="px-4 py-5 sm:px-6">
+              <h3 className="text-lg leading-6 font-medium text-gray-900">8. Rewards & Loyalty Comparison</h3>
+              <p className="mt-1 max-w-2xl text-sm text-gray-500">Rewards programs, cashback offers, loyalty clubs, and sweepstakes.</p>
+            </div>
+            <div className="border-t border-gray-200 overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Competitor</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Program</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rewards</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Membership</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member Benefits</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sweepstakes</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {rewardsResults.map((result, idx) => {
+                    const comp = competitors.find(c => c.url === result.url);
+                    return (
+                      <tr key={idx}>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900 align-top">
+                          {comp?.name || 'Unknown'}<br/>
+                          {result.error ? (
+                            <span className="text-[10px] text-red-500 font-bold uppercase italic">{result.error}</span>
+                          ) : (
+                            <a href={result.sourceUrl || '#'} target="_blank" rel="noopener noreferrer" className="text-[10px] text-indigo-600 hover:text-indigo-900 font-mono">[Rewards Page]</a>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900 font-bold align-top">
+                          {result.programName || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 align-top">
+                          {result.rewards?.length > 0 ? (
+                            <ul className="space-y-2">
+                              {result.rewards.map((r, rIdx) => {
+                                const type = (r.rewardType || '').toLowerCase();
+                                let badgeClass = 'bg-gray-100 text-gray-700';
+                                if (type === 'cashback') badgeClass = 'bg-green-100 text-green-700';
+                                if (type === 'points') badgeClass = 'bg-blue-100 text-blue-700';
+                                if (type === 'sweepstakes') badgeClass = 'bg-yellow-100 text-yellow-800';
+                                if (type === 'discount') badgeClass = 'bg-purple-100 text-purple-700';
+
+                                return (
+                                  <li key={rIdx} className="leading-tight">
+                                    <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight ${badgeClass} mr-2`}>
+                                      {r.rewardType || 'Other'}
+                                    </span>
+                                    {r.percentage && <span className="text-green-700 font-bold text-sm mr-1">{r.percentage}</span>}
+                                    <span className="text-sm text-gray-700">{r.description || ''}</span>
+                                    {r.condition && <span className="text-xs text-gray-400 block ml-1 italic">{r.condition}</span>}
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          ) : <span className="text-gray-400 italic text-xs">None found</span>}
+                        </td>
+                        <td className="px-6 py-4 align-top text-center">
+                          {result.membershipRequired ? (
+                            <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-orange-100 text-orange-700">REQUIRED</span>
+                          ) : (
+                            <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-green-100 text-green-700">OPEN</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700 align-top max-w-xs">
+                          {result.membershipBenefits || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 text-sm align-top max-w-xs">
+                          {result.sweepstakes ? (
+                            <span className="text-yellow-700 font-bold">{result.sweepstakes}</span>
+                          ) : (
+                            <span className="text-gray-400 italic">None active</span>
+                          )}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-500 italic align-top max-w-xs">
                           {result.additionalNotes || '-'}

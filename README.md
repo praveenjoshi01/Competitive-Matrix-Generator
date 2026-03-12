@@ -41,6 +41,14 @@ Automated discovery of shipping policy pages to compare logistics:
 - **Delivery Speed**: Compares 2-day, Same-day, and Standard delivery options.
 - **Store Pickup**: Checks for Click & Collect or in-store fulfillment availability.
 
+### 7. Rewards & Loyalty Programs 🏆
+Scrapes and compares competitor rewards ecosystems:
+- **Program Discovery**: Finds rewards/loyalty pages automatically via link analysis and fallback paths.
+- **Reward Classification**: Color-coded badges for Cashback, Points, Sweepstakes, Discount, and Other reward types.
+- **Membership Detection**: Identifies whether sign-up is required and lists exclusive member benefits.
+- **Sweepstakes Tracking**: Highlights active giveaways and promotional sweepstakes.
+- **Runtime Discovery**: AI-driven identification of new reward structures not explicitly pre-defined.
+
 ## 🛠️ Tech Stack
 
 - **Frontend**: Next.js 15 (App Router), React, Tailwind CSS
